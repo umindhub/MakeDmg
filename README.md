@@ -1,5 +1,7 @@
 # MakeDmg
 
+**English** | [Deutsch](docs/i18n/README_de.md) | [Español](docs/i18n/README_es.md) | [Français](docs/i18n/README_fr.md) | [Italiano](docs/i18n/README_it.md) | [日本語](docs/i18n/README_ja.md) | [한국어](docs/i18n/README_ko.md) | [Nederlands](docs/i18n/README_nl.md) | [简体中文](docs/i18n/README_zh-Hans.md) | [繁體中文](docs/i18n/README_zh-Hant.md)
+
 `makedmg` builds styled macOS disk images from a JSON config: background image or color,
 icon layout, an Applications link, a volume icon, code signing and notarization.
 
