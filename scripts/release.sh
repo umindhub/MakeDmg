@@ -45,11 +45,23 @@ step "Testing"
 swift test
 
 step "Building universal binary"
-swift build -c release --arch arm64 --arch x86_64
-BIN="${ROOT}/.build/apple/Products/Release/makedmg"
+BUILD_ARGS=(-c release --arch arm64 --arch x86_64)
+swift build "${BUILD_ARGS[@]}"
+# Output folder differs between SwiftPM versions; ask SwiftPM instead of guessing.
+BIN="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)/makedmg"
+[[ -f "${BIN}" ]] || fail "Built binary not found: ${BIN}"
 ARCHS="$(lipo -archs "${BIN}")"
 [[ "${ARCHS}" == *arm64* && "${ARCHS}" == *x86_64* ]] || fail "Not universal: ${ARCHS}"
-ok "Architectures: ${ARCHS}"
+ok "Architectures: ${ARCHS} (${BIN})"
+
+# Package.swift targets macOS 13; make sure the binary really runs there.
+MIN_OS="13.0"
+for arch in arm64 x86_64; do
+  MINOS="$(vtool -arch "${arch}" -show-build "${BIN}" 2>/dev/null | awk '/minos/ {print $2; exit}')"
+  [[ -n "${MINOS}" ]] || fail "Cannot read minimum macOS for ${arch}"
+  [[ "${MINOS}" == "${MIN_OS}" ]] || fail "${arch} requires macOS ${MINOS}, expected ${MIN_OS}"
+done
+ok "Minimum macOS: ${MIN_OS} (arm64 + x86_64)"
 
 rm -rf "${DIST}"
 mkdir -p "${DIST}/stage"
