@@ -32,7 +32,8 @@ ok "Clean tree, ${TAG} is free"
 
 # ─── Version bump ─────────────────────────────────────────
 step "Setting version ${VERSION}"
-sed -i '' -E "s/(public static let version = \")[^\"]*(\")/\1${VERSION}\2/" "${APPINFO}"
+# Use the system BSD sed/tar explicitly; GNU versions in PATH take different flags.
+/usr/bin/sed -i '' -E "s/(public static let version = \")[^\"]*\"/\1${VERSION}\"/" "${APPINFO}"
 grep -q "version = \"${VERSION}\"" "${APPINFO}" || fail "Could not update ${APPINFO}"
 if ! git diff --quiet; then
   git commit -qam "Release ${VERSION}"
@@ -80,7 +81,7 @@ ok "Notarized"
 
 # ─── Package ──────────────────────────────────────────────
 step "Packaging"
-COPYFILE_DISABLE=1 tar --no-xattrs -czf "${ARCHIVE}" -C "${DIST}/stage" makedmg LICENSE README.md
+COPYFILE_DISABLE=1 /usr/bin/tar --no-xattrs -czf "${ARCHIVE}" -C "${DIST}/stage" makedmg LICENSE README.md
 (cd "${DIST}" && shasum -a 256 "$(basename "${ARCHIVE}")" > "$(basename "${ARCHIVE}").sha256")
 ok "$(cat "${ARCHIVE}.sha256")"
 
