@@ -1,0 +1,12 @@
+{
+  "volumeName": "MakeDmg Demo",
+  "output": "build/Demo.dmg",
+  "format": "ULFO",
+  "window": { "x": 200, "y": 120, "width": 600, "height": 400 },
+  "icon": { "size": 100, "textSize": 16 },
+  "background": { "color": "#E8F0FE" },
+  "contents": [
+    { "path": "build/Demo.app", "x": 150, "y": 150 },
+    { "type": "applications", "x": 450, "y": 150 }
+  ]
+}

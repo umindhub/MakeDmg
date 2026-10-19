@@ -1,0 +1,16 @@
+{
+  "volumeName": "MyApp",
+  "output": "build/MyApp.dmg",
+  "format": "ULMO",
+  "filesystem": "HFS+",
+  "window": { "x": 200, "y": 120, "width": 640, "height": 400 },
+  "icon": { "size": 128, "textSize": 13 },
+  "background": { "color": "#121233" },
+  "contents": [
+    { "path": "build/MyApp.app", "x": 160, "y": 200 },
+    { "type": "applications", "x": 480, "y": 200 }
+  ],
+  "volumeIcon": "assets/volume.icns",
+  "sign": { "identity": "Developer ID Application: Your Name (TEAMID)" },
+  "notarize": { "keychainProfile": "notary" }
+}

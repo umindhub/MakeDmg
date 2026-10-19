@@ -1,0 +1,12 @@
+{
+  "volumeName": "MyApp",
+  "output": "build/MyApp.dmg",
+  "format": "ULMO",
+  "window": { "width": 640, "height": 400 },
+  "icon": { "size": 128 },
+  "background": { "image": "assets/background.png" },
+  "contents": [
+    { "path": "build/MyApp.app", "x": 160, "y": 200 },
+    { "type": "applications", "x": 480, "y": 200 }
+  ]
+}

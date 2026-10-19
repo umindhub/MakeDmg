@@ -1,0 +1,82 @@
+name: Bump Homebrew Formula
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, e.g. v0.1.0"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homebrew-bump
+  cancel-in-progress: false
+
+env:
+  FORMULA: makedmg
+  TAP_REPO: umindhub/homebrew-tap
+
+jobs:
+  bump:
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Resolve version and asset
+        run: |
+          if [ -z "$TAG" ]; then echo "No tag"; exit 1; fi
+          VERSION="${TAG#v}"
+          ASSET="${FORMULA}-${VERSION}-macos.tar.gz"
+          {
+            echo "VERSION=${VERSION}"
+            echo "ASSET=${ASSET}"
+            echo "URL=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ASSET}"
+          } >> "$GITHUB_ENV"
+
+      - name: Download archive and compute sha256
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$TAG" -R "$GITHUB_REPOSITORY" -p "$ASSET"
+          echo "SHA256=$(sha256sum "$ASSET" | cut -d' ' -f1)" >> "$GITHUB_ENV"
+
+      - name: Checkout tap
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TAP_REPO }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update formula
+        working-directory: tap
+        run: |
+          FILE="Formula/${FORMULA}.rb"
+          sed -i -E \
+            -e "s#^  url \".*\"#  url \"${URL}\"#" \
+            -e "s/^  version \".*\"/  version \"${VERSION}\"/" \
+            -e "s/^  sha256 \".*\"/  sha256 \"${SHA256}\"/" \
+            "$FILE"
+          # Fail loudly if the stanzas were not matched
+          grep -qF "  url \"${URL}\"" "$FILE"
+          grep -q "^  version \"${VERSION}\"" "$FILE"
+          grep -q "^  sha256 \"${SHA256}\"" "$FILE"
+          git diff --stat
+
+      - name: Commit and push
+        working-directory: tap
+        run: |
+          if git diff --quiet; then echo "No changes"; exit 0; fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "${FORMULA} ${VERSION}"
+          for i in 1 2 3; do
+            git push && exit 0
+            sleep 3
+            git pull --rebase
+          done
+          exit 1

@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "makedmg config",
+  "description": "Configuration for makedmg, a Finder-free DMG builder.",
+  "type": "object",
+  "required": [
+    "volumeName",
+    "output",
+    "contents"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "volumeName": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^:]*$",
+      "description": "Volume name, shown as the Finder window title."
+    },
+    "output": {
+      "type": "string",
+      "description": "Output DMG path, relative to this config file."
+    },
+    "format": {
+      "enum": [
+        "UDZO",
+        "UDBZ",
+        "ULFO",
+        "ULMO"
+      ],
+      "default": "ULFO",
+      "description": "UDZO zlib (widest support), UDBZ bzip2, ULFO lzfse (macOS 10.11+), ULMO lzma (macOS 10.15+)."
+    },
+    "filesystem": {
+      "enum": [
+        "HFS+",
+        "APFS"
+      ],
+      "default": "HFS+",
+      "description": "Image backgrounds currently require HFS+."
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Finder window frame in points, top-left origin. The frame includes the title bar.",
+      "properties": {
+        "x": {
+          "type": "integer",
+          "default": 200
+        },
+        "y": {
+          "type": "integer",
+          "default": 120
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 100,
+          "default": 640
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 100,
+          "default": 400
+        },
+        "showToolbar": {
+          "type": "boolean",
+          "default": false
+        },
+        "showSidebar": {
+          "type": "boolean",
+          "default": false
+        },
+        "showStatusBar": {
+          "type": "boolean",
+          "default": false
+        },
+        "showPathBar": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "icon": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 512,
+          "default": 128
+        },
+        "textSize": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 16,
+          "default": 16
+        },
+        "labelPosition": {
+          "enum": [
+            "bottom",
+            "right"
+          ],
+          "default": "bottom"
+        }
+      }
+    },
+    "background": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Either a solid color or an image (a sibling name@2x file is used for Retina).",
+      "oneOf": [
+        {
+          "required": [
+            "color"
+          ]
+        },
+        {
+          "required": [
+            "image"
+          ]
+        }
+      ],
+      "properties": {
+        "color": {
+          "type": "string",
+          "pattern": "^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$"
+        },
+        "image": {
+          "type": "string"
+        }
+      }
+    },
+    "contents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y"
+        ],
+        "description": "x and y are the icon center in points, relative to the window content area.",
+        "properties": {
+          "type": {
+            "enum": [
+              "file",
+              "applications"
+            ],
+            "default": "file"
+          },
+          "path": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name inside the DMG; defaults to the file name."
+          },
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "hideExtension": {
+            "type": "boolean",
+            "default": false,
+            "description": "Hide the extension in Finder, e.g. show \"MyApp\" for MyApp.app."
+          }
+        },
+        "if": {
+          "properties": {
+            "type": {
+              "const": "applications"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        "then": {
+          "not": {
+            "required": [
+              "path"
+            ]
+          }
+        },
+        "else": {
+          "required": [
+            "path"
+          ]
+        }
+      }
+    },
+    "volumeIcon": {
+      "type": "string",
+      "pattern": "\\.icns$",
+      "description": "Custom volume icon (.icns)."
+    },
+    "sign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "description": "e.g. \"Developer ID Application: Name (TEAMID)\""
+        }
+      }
+    },
+    "notarize": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "keychainProfile"
+      ],
+      "properties": {
+        "keychainProfile": {
+          "type": "string",
+          "description": "Profile saved with `xcrun notarytool store-credentials`."
+        }
+      }
+    }
+  }
+}
